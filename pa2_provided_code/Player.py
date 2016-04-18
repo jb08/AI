@@ -1,4 +1,4 @@
-# File: Player.py
+2# File: Player.py
 # Author(s) names AND netid's: Jason Brown (JKB930) Megan Sinclair (MES297) David Williams (DMW956)
 # Date:
 # Group work statement: All group members were present and contributing during all work on this project
@@ -105,6 +105,8 @@ class Player:
         return score
 
 
+
+
     # The default player defines a very simple score function
     # You will write the score function in the MancalaPlayer below
     # to improve on this function.
@@ -130,9 +132,98 @@ class Player:
     # and/or a different move search order.
     def alphaBetaMove(self, board, ply):
         """ Choose a move with alpha beta pruning.  Returns (score, move) """
-        print "Alpha Beta Move not yet implemented"
-        #returns the score adn the associated moved
-        return (-1,1)
+        move = -1
+        score = -INFINITY
+        turn = self
+        alpha = -INFINITY
+        beta = INFINITY
+        for m in board.legalMoves(self):
+
+            #for each legal move
+            if ply == 0:
+                #if we're at ply 0, we need to call our eval function & return
+                return (self.score(board), m)
+            if board.gameOver():
+                return (-1, -1)  # Can't make a move, the game is over
+            nb = deepcopy(board)
+            #make a new board
+            nb.makeMove(self, m)
+            #try the move
+            opp = Player(self.opp, self.type, self.ply)
+
+            a = deepcopy(alpha)
+            b = deepcopy(beta)
+
+            s = opp.ABminValue(nb, ply-1, turn, a, b)
+            #and see what the opponent would do next
+            if s > score:
+                #if the result is better than our best score so far, save that move,score
+                move = m
+                score = s
+            if score >= beta:
+                print "pruned at alphaBetaMove() b/c score >= beta; score: ", score, "beta: ", beta
+                return score, move
+            alpha = max(alpha, score)
+        #return the best score and move so far
+        return score, move
+
+    def ABminValue(self, board, ply, turn, alpha, beta):
+        """ Find AB Prune value for the next move for this player
+            at a given board configuation. Returns score."""
+        if board.gameOver():
+            return turn.score(board)
+        score = INFINITY
+        for m in board.legalMoves(self):
+            if ply == 0:
+                #print "turn.score(board) in min Value is: " + str(turn.score(board))
+                return turn.score(board)
+            # make a new player to play the other side
+            opponent = Player(self.opp, self.type, self.ply)
+            # Copy the board so that we don't ruin it
+            nextBoard = deepcopy(board)
+            nextBoard.makeMove(self, m)
+
+            a = deepcopy(alpha)
+            b = deepcopy(beta)
+
+            s = opponent.ABmaxValue(nextBoard, ply-1, turn, a, b)
+            #print "s in minValue is: " + str(s)
+            if s < score:
+                score = s
+            if score <= alpha:
+                print "pruned at ABminValue() b/c score <= alpha; score: ", score, "alpha: ", alpha
+                return score
+            beta = min(beta,score)
+        return score
+
+    def ABmaxValue(self, board, ply, turn, alpha, beta):
+        """ Find the AB Prune value for the next move for this player
+        at a given board configuation. Returns score."""
+        if board.gameOver():
+            return turn.score(board)
+        score = -INFINITY
+        for m in board.legalMoves(self):
+            if ply == 0:
+                #print "turn.score(board) in max value is: " + str(turn.score(board))
+                return turn.score(board)
+            # make a new player to play the other side
+            opponent = Player(self.opp, self.type, self.ply)
+            # Copy the board so that we don't ruin it
+            nextBoard = deepcopy(board)
+            nextBoard.makeMove(self, m)
+
+            a = deepcopy(alpha)
+            b = deepcopy(beta)
+
+            s = opponent.ABminValue(nextBoard, ply-1, turn, a, b)
+            #print "s in maxValue is: " + str(s)
+            if s > score:
+                score = s
+            if score >= beta:
+                print "pruned at ABmaxValue() b/c score >= beta; score: ", score, "beta: ", beta
+                return score
+            alpha = max(alpha,score)
+        return score
                 
     def chooseMove(self, board):
         """ Returns the next move that this player wants to make """
@@ -151,9 +242,13 @@ class Player:
             print "chose move", move, " with value", val
             return move
         elif self.type == self.ABPRUNE:
-            val, move = self.alphaBetaMove(board, self.ply)
-            print "chose move", move, " with value", val
-            return move
+            ABval, ABmove = self.alphaBetaMove(board, self.ply)
+            print "AB - chose move", ABmove, " with value", ABval
+            
+            MMval, MMmove = self.minimaxMove(board, self.ply)
+            print "MM - chose move", MMmove, " with value", MMval
+
+            return ABmove
         elif self.type == self.CUSTOM:
             # TODO: Implement a custom player
             # You should fill this in with a call to your best move choosing

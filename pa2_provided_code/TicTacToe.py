@@ -11,7 +11,8 @@ class TTTBoard:
         ret = "\n"
         for i in range(len(self.board)):
             if self.board[i] == " ":
-                ret += str(i)
+                ret += "-" #new
+                #ret += str(i)
             else:
                 ret+=self.board[i]
             if (i+1) % 3 == 0:
