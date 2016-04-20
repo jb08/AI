@@ -23,7 +23,7 @@ ABPRUNE_won = 0
 Other_won = 0
 tie = 0
 
-for i in range(3):
+for i in range():
 	#print i
 
 	game.reset()
