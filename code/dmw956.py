@@ -1,6 +1,6 @@
-2# File: Player.py
+# File: dmw956.py
 # Author(s) names AND netid's: Jason Brown (JKB930) Megan Sinclair (MES297) David Williams (DMW956)
-# Date:
+# Date: 4/20/16
 # Group work statement: All group members were present and contributing during all work on this project
 # Defines a simple artificially intelligent player agent
 # You will define the alpha-beta pruning search algorithm
@@ -12,6 +12,7 @@ from random import *
 from decimal import *
 from copy import *
 from MancalaBoard import *
+import time
 
 # a constant
 INFINITY = 1.0e400
@@ -24,9 +25,10 @@ class Player:
     ABPRUNE = 3
     CUSTOM = 4
     
-    def __init__(self, playerNum, playerType, ply=0):
+    def __init__(self, playerNum, playerType, ply=10):
         """Initialize a Player with a playerNum (1 or 2), playerType (one of
         the constants such as HUMAN), and a ply (default is 0)."""
+        # NOTE: This is where we set our default ply of 10
         self.num = playerNum
         self.opp = 2 - playerNum + 1
         self.type = playerType
@@ -105,8 +107,6 @@ class Player:
         return score
 
 
-
-
     # The default player defines a very simple score function
     # You will write the score function in the MancalaPlayer below
     # to improve on this function.
@@ -132,11 +132,13 @@ class Player:
     # and/or a different move search order.
     def alphaBetaMove(self, board, ply):
         """ Choose a move with alpha beta pruning.  Returns (score, move) """
+        # Setup variables
         move = -1
         score = -INFINITY
         turn = self
         alpha = -INFINITY
         beta = INFINITY
+
         for m in board.legalMoves(self):
 
             #for each legal move
@@ -151,17 +153,19 @@ class Player:
             #try the move
             opp = Player(self.opp, self.type, self.ply)
 
+            #make copies of alpha and beta to pass on
             a = deepcopy(alpha)
             b = deepcopy(beta)
 
+            #See what the opponent does in response, with pruning
             s = opp.ABminValue(nb, ply-1, turn, a, b)
-            #and see what the opponent would do next
+            
             if s > score:
                 #if the result is better than our best score so far, save that move,score
                 move = m
                 score = s
             if score >= beta:
-                print "pruned at alphaBetaMove() b/c score >= beta; score: ", score, "beta: ", beta
+                #If the minimum we will accept is better than the worst from above, stop exploring
                 return score, move
             alpha = max(alpha, score)
         #return the best score and move so far
@@ -183,15 +187,17 @@ class Player:
             nextBoard = deepcopy(board)
             nextBoard.makeMove(self, m)
 
+            #make copies of alpha and beta to pass on
             a = deepcopy(alpha)
             b = deepcopy(beta)
 
+            #figure out what max does in return
             s = opponent.ABmaxValue(nextBoard, ply-1, turn, a, b)
             #print "s in minValue is: " + str(s)
             if s < score:
                 score = s
             if score <= alpha:
-                print "pruned at ABminValue() b/c score <= alpha; score: ", score, "alpha: ", alpha
+                #If the maximum we will accept is higher than the minimum from above, stop exploring
                 return score
             beta = min(beta,score)
         return score
@@ -212,15 +218,17 @@ class Player:
             nextBoard = deepcopy(board)
             nextBoard.makeMove(self, m)
 
+            #make copies of alpha and beta to pass on
             a = deepcopy(alpha)
             b = deepcopy(beta)
 
+            #figure out what min would do in response
             s = opponent.ABminValue(nextBoard, ply-1, turn, a, b)
             #print "s in maxValue is: " + str(s)
             if s > score:
                 score = s
             if score >= beta:
-                print "pruned at ABmaxValue() b/c score >= beta; score: ", score, "beta: ", beta
+                #If the minimum we will accept is better than the worst from above, stop exploring
                 return score
             alpha = max(alpha,score)
         return score
@@ -243,54 +251,53 @@ class Player:
             return move
         elif self.type == self.ABPRUNE:
             ABval, ABmove = self.alphaBetaMove(board, self.ply)
-            print "AB - chose move", ABmove, " with value", ABval
+            print "chose move", ABmove, " with value", ABval
             
-            MMval, MMmove = self.minimaxMove(board, self.ply)
-            print "MM - chose move", MMmove, " with value", MMval
+            #MMval, MMmove = self.minimaxMove(board, self.ply)
+            #print "MM - chose move", MMmove, " with value", MMval
 
             return ABmove
         elif self.type == self.CUSTOM:
-            # TODO: Implement a custom player
-            # You should fill this in with a call to your best move choosing
-            # function.  You may use whatever search algorithm and scoring
-            # algorithm you like.  Remember that your player must make
-            # each move in about 10 seconds or less.
-            print "Custom player not yet implemented"
-            return -1
+            #start = time.clock()
+
+            #Our custom player just uses our improved ABPrune algorithm
+            ABval, ABmove = self.alphaBetaMove(board, self.ply)
+
+            #print "AB - chose move", ABmove, " with value", ABval
+            #end = time.clock()
+            #print "move took (s): ", end-start
+            return ABmove
         else:
             print "Unknown player type"
             return -1
 
 
 # Note, you should change the name of this player to be your netid
-class MancalaPlayer(Player):
+class dmw956(Player):
     """ Defines a player that knows how to evaluate a Mancala gameboard
         intelligently """
 
     def score(self, board):
-        """ Evaluate the Mancala board for this player """
-        # Currently this function just calls Player's score
-        # function.  You should replace the line below with your own code
-        # for evaluating the board
-        print "Calling score in MancalaPlayer"
-        #output = Player.score(self, board)
-
+        """ Evaluate the Mancala board for the custom player """
+        
+    
+        # Score is determined by the number of rocks in a player's mancala
+        # minus those in the opponents. A greater separation is a greater
+        # score.
         if(self.num == 1):
-
+            #Get number of points in cups
             score1 = board.scoreCups[0]
             score2 = board.scoreCups[1]
-
+            #subtract and return
             myScore = score1-score2
-            print "Player: ", self.num, "score: ", myScore
+            #print "Player: ", self.num, "score: ", myScore
             return myScore
 
         if(self.num == 2):
-            if board.hasWon(self.num):
-                myScore = 100.0
-            elif board.hasWon(self.opp):
-                myScore = 0.0
-            else:
-                myScore = 50.0
-
-            print "Player: ", self.num, "score: ", myScore
+            #Get number of points in cups
+            score1 = board.scoreCups[0]
+            score2 = board.scoreCups[1]
+            #subtract and return
+            myScore = score2-score1
+            #print "Player: ", self.num, "score: ", myScore
             return myScore
