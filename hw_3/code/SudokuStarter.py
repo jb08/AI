@@ -134,7 +134,7 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
 		return initial_board
     else:
 		for i in range(0,initial_board.BoardSize):
-			for j in range(0,inital_board.BoardSize):
+			for j in range(0,initial_board.BoardSize):
 				if(BoardArray[i][j] == 0):
 					empty_squares.append((i,j))
 
@@ -174,11 +174,11 @@ def all_dif(initial_board, variable, value):
 
     # Checks to see if value is present in variable's column
     for i in range(0,initial_board.BoardSize):
-        if (Board_Array[i][variable[1]] == value):
+        if (BoardArray[i][variable[1]] == value):
             return False
 
     # Checks to see if value is present in variable's subsquare
-    subsquare = int(math.sqrt(size))
+    subsquare = int(math.sqrt(initial_board.BoardSize))
     SquareRow = variable[0] // subsquare
     SquareCol = variable[1] // subsquare
 
@@ -186,5 +186,5 @@ def all_dif(initial_board, variable, value):
         for j in range(subsquare):
             if((BoardArray[SquareRow*subsquare+i][SquareCol*subsquare+j] == value)):
                 return False
-                
+
     return True
