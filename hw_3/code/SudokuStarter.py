@@ -114,42 +114,44 @@ def init_board(file_name):
 
 def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
     LCV = False):
-    """Takes an initial SudokuBoard and solves it using back tracking, and zero
-    or more of the heuristics and constraint propagation methods (determined by
-    arguments). Returns the resulting board solution. """
-	BoardArray = initial_board.CurrentGameBoard
+    #"""Takes an initial SudokuBoard and solves it using back tracking, and zero
+    #or more of the heuristics and constraint propagation methods (determined by
+    #arguments). Returns the resulting board solution. """
+	
+    BoardArray = initial_board.CurrentGameBoard
 
 	#Check if complete
-	if(is_complete(initial_board)):
+    if(is_complete(initial_board)):
 		return initial_board
 	
 	#Forward-check
 
 	#Select an unassigned variable
-	empty_squares = []
-	if(MRV):
+    empty_squares = []
+    if(MRV):
 		return initial_board
-	else if(Degree):
+    elif(Degree):
 		return initial_board
-	else:
+    else:
 		for i in range(0,initial_board.BoardSize):
 			for j in range(0,inital_board.BoardSize):
 				if(BoardArray[i][j] == 0):
 					empty_squares.append((i,j))
-	variable = empty_squares.pop()
+
+    variable = empty_squares.pop()
 
 	#Select ordering for domain of variable
-	domain = []
-	if (LCV):
+    domain = []
+    if (LCV):
 		return initial_board
-	else:
+    else:
 		# Create a list of the valid values in the variable's domain
 		for i in range(1,initial_board.BoardSize+1):
 			if (all_dif(initial_board, variable, i)):
 				domain.append(i)
 
 	#Look through values	
-	for v in domain:
+    for v in domain:
 		updated_board = copy.deepcopy(initial_board)
 		updated_board.set_value(variable[0], variable[1], v)
 		result = solve(updated_board, forward_checking, MRV, Degree, LCV)
@@ -158,38 +160,31 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
 	#Tried all values for a given variable, no valid solution
     return initial_board
 
-
-
-
 def all_dif(initial_board, variable, value):
-	
-	BoardArray = initial_board.CurrentGameBoard
-	row_c = True
-	col_c = True
-	square_c = True
+    
+    BoardArray = initial_board.CurrentGameBoard
+    row_c = True
+    col_c = True
+    square_c = True
 
-	# Checks to see if value is present in variable's row
-	for i in range(0,initial_board.BoardSize):
-		if (BoardArray[variable[0]][i] == value):
-			return False
-	# Checks to see if value is present in variable's column
-	for i in range(0,initial_board.BoardSize):
-		if (Board_Array[i][variable[1]] == value):
-			return False
-	# Checks to see if value is present in variable's subsquare
-	subsquare = int(math.sqrt(size))
-	SquareRow = variable[0] // subsquare
+    # Checks to see if value is present in variable's row
+    for i in range(0,initial_board.BoardSize):
+        if (BoardArray[variable[0]][i] == value):
+            return False
+
+    # Checks to see if value is present in variable's column
+    for i in range(0,initial_board.BoardSize):
+        if (Board_Array[i][variable[1]] == value):
+            return False
+
+    # Checks to see if value is present in variable's subsquare
+    subsquare = int(math.sqrt(size))
+    SquareRow = variable[0] // subsquare
     SquareCol = variable[1] // subsquare
-	for i in range(subsquare):
-                for j in range(subsquare):
-                    if((BoardArray[SquareRow*subsquare+i][SquareCol*subsquare+j]
-                            == value):
-                        return False                       
-	return True
 
-
-
-
-
-
-
+    for i in range(subsquare):
+        for j in range(subsquare):
+            if((BoardArray[SquareRow*subsquare+i][SquareCol*subsquare+j] == value)):
+                return False
+                
+    return True
