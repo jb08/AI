@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import struct, string, math
+import struct, string, math, copy
 
 class SudokuBoard:
     """This will be the sudoku board game object your player will manipulate."""
@@ -117,7 +117,6 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
     """Takes an initial SudokuBoard and solves it using back tracking, and zero
     or more of the heuristics and constraint propagation methods (determined by
     arguments). Returns the resulting board solution. """
-    
 	BoardArray = initial_board.CurrentGameBoard
 
 	#Check if complete
@@ -142,13 +141,21 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
 	#Select ordering for domain of variable
 	domain = []
 	if (LCV):
-
+		return initial_board
 	else:
-		
+		# Create a list of the valid values in the variable's domain
+		for i in range(1,initial_board.BoardSize+1):
+			if (all_dif(initial_board, variable, i)):
+				domain.append(i)
 
 	#Look through values	
-
-
+	for v in domain:
+		updated_board = copy.deepcopy(initial_board)
+		updated_board.set_value(variable[0], variable[1], v)
+		result = solve(updated_board, forward_checking, MRV, Degree, LCV)
+		if(is_complete(result)):
+			return result
+	#Tried all values for a given variable, no valid solution
     return initial_board
 
 
