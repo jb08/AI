@@ -128,27 +128,56 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
 
 	#Select an unassigned variable
     empty_squares = []
-    if(MRV):
-		return initial_board
-    elif(Degree):
-		return initial_board
-    else:
-		for i in range(0,initial_board.BoardSize):
-			for j in range(0,initial_board.BoardSize):
-				if(BoardArray[i][j] == 0):
-					empty_squares.append((i,j))
 
-    variable = empty_squares.pop()
+    if(MRV):
+        #return initial_board
+        count_most_constrained = initial_board.BoardSize+1
+
+        for i in range(0,initial_board.BoardSize):
+            for j in range(0,initial_board.BoardSize):
+                if(BoardArray[i][j] == 0):
+                    variable = (i,j)
+                    domain = get_domain(initial_board, variable)
+
+                    if(len(domain)<count_most_constrained):
+                        empty_squares.insert(0,variable)
+    elif(Degree):
+        return initial_board
+    
+    else:
+        for i in range(0,initial_board.BoardSize):
+            for j in range(0,initial_board.BoardSize):
+                if(BoardArray[i][j] == 0):
+                    variable = (i,j)
+                    empty_squares.append(variable)
+
+    variable = empty_squares.pop(0)
 
 	#Select ordering for domain of variable
     domain = []
+    domain = get_domain(initial_board, variable)
+
     if (LCV):
-		return initial_board
-    else:
-		# Create a list of the valid values in the variable's domain
-		for i in range(1,initial_board.BoardSize+1):
-			if (all_dif(initial_board, variable, i)):
-				domain.append(i)
+        unassn_vars = affected_vars(initial_board, variable)
+        unassn_domains = []
+        for var in unassn_vars:
+            unassn_domains.append(get_domain(initial_board,var))
+
+        domain_sums= []
+        for value in domain:
+            temp_sum = 0
+            for dom in unassn_domains:
+                if value in dom:
+                    temp_sum++
+            domain_sums.append((value,temp_sum))
+        domain_sums.sort(key=lambda x: x[1])
+        domain = []
+        for tup in domain_sums:
+            domain.append(tup[0])
+
+
+            
+
 
 	#Look through values	
     for v in domain:
@@ -160,12 +189,21 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
 	#Tried all values for a given variable, no valid solution
     return initial_board
 
+def get_domain(initial_board, variable):
+    """given a square, returns all legal values for the square"""
+    
+    domain = []
+
+    # Create a list of the valid values in the variable's domain
+    for i in range(1,initial_board.BoardSize+1):
+        if (all_dif(initial_board, variable, i)):
+            domain.append(i)
+
+    return domain
+
 def all_dif(initial_board, variable, value):
     
     BoardArray = initial_board.CurrentGameBoard
-    row_c = True
-    col_c = True
-    square_c = True
 
     # Checks to see if value is present in variable's row
     for i in range(0,initial_board.BoardSize):
@@ -188,3 +226,34 @@ def all_dif(initial_board, variable, value):
                 return False
 
     return True
+
+#Given a variable, return a list of all unassigned variables affected by that var assignment
+def affected_vars(initial_board, variable):
+    BoardArray = initial_board.CurrentGameBoard
+    unassn_vars = []
+
+    #  Adds unassigned vars in variable's row to list
+    for i in range(0,initial_board.BoardSize):
+        if (BoardArray[variable[0]][i] == 0):
+            unassn_vars.append((variable[0],i))
+
+   # Adds unassigned vars in variable's col to list
+    for i in range(0,initial_board.BoardSize):
+        if (BoardArray[i][variable[1]] == 0):
+            unassn_vars.append((i,variable[1]))
+
+   #  Adds unassigned vars in variable's subsquare to list
+    subsquare = int(math.sqrt(initial_board.BoardSize))
+    SquareRow = variable[0] // subsquare
+    SquareCol = variable[1] // subsquare
+
+    for i in range(subsquare):
+        for j in range(subsquare):
+            indexRow = SquareRow*subsquare+i
+            indexCol = SquareCol*subsquare+j
+            if((BoardArray[indexRow][indexCol] == 0)):
+                #Don't add dupes
+                if not((indexRow, indexCol) in unassn_vars):
+                    unassn_vars.append((indexRow,indexCol))
+
+    return unassn_vars
