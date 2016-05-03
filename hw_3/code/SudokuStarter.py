@@ -168,16 +168,12 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
             temp_sum = 0
             for dom in unassn_domains:
                 if value in dom:
-                    temp_sum++
+                    temp_sum+=1
             domain_sums.append((value,temp_sum))
         domain_sums.sort(key=lambda x: x[1])
         domain = []
         for tup in domain_sums:
             domain.append(tup[0])
-
-
-            
-
 
 	#Look through values	
     for v in domain:
