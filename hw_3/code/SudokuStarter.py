@@ -1,8 +1,18 @@
 #!/usr/bin/env python
-import struct, string, math, copy
+import struct, string, math, copy, signal, sys
+
+consistency_checks = 0
+def signal_handler(signal,frame):
+    global consistency_checks
+    print "Interrupted - consistency_checks: ", consistency_checks
+    sys.exit()
+signal.signal(signal.SIGINT,signal_handler)
+
+
 
 class SudokuBoard:
     """This will be the sudoku board game object your player will manipulate."""
+
   
     def __init__(self, size, board):
       """the constructor for the SudokuBoard"""
@@ -15,6 +25,7 @@ class SudokuBoard:
 
         #add the value to the appropriate position on the board
         self.CurrentGameBoard[row][col]=value
+
         #return a new board of the same size with the value added
         return SudokuBoard(self.BoardSize, self.CurrentGameBoard)
                                                                   
@@ -112,17 +123,27 @@ def init_board(file_name):
     board = parse_file(file_name)
     return SudokuBoard(len(board), board)
 
+def top_solve(initial_board, forward_checking = False, MRV = False, Degree = False,
+    LCV = False):
+    global consistency_checks
+    consistency_checks = 0
+    return solve(initial_board, forward_checking,MRV,Degree,LCV)
+
+
 def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
     LCV = False):
-    #"""Takes an initial SudokuBoard and solves it using back tracking, and zero
-    #or more of the heuristics and constraint propagation methods (determined by
-    #arguments). Returns the resulting board solution. """
+    """Takes an initial SudokuBoard and solves it using back tracking, and zero
+    or more of the heuristics and constraint propagation methods (determined by
+    arguments). Returns the resulting board solution. """
 	
     BoardArray = initial_board.CurrentGameBoard
+    global consistency_checks
 
 	#Check if complete
     if(is_complete(initial_board)):
-		return initial_board
+        #print "success! (top)"
+        print "consistency_checks: ", consistency_checks
+        return initial_board
 	
 	#Forward-check
 
@@ -141,8 +162,23 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
 
                     if(len(domain)<count_most_constrained):
                         empty_squares.insert(0,variable)
+                    else:
+                        empty_squares.append(variable)
+
     elif(Degree):
-        return initial_board
+        degree_var = (-1,-1)
+        degree_len = 0
+        for i in range(0,initial_board.BoardSize):
+            for j in range(0,initial_board.BoardSize):
+                if(BoardArray[i][j] == 0):
+                    variable = (i,j)
+                    aff_vars = affected_vars(initial_board,variable)
+                    if len(aff_vars) > degree_len:
+                        degree_len = len(aff_vars)
+                        degree_var = variable
+                        empty_squares.insert(0,variable)
+                    else:
+                        empty_squares.append(variable)
     
     else:
         for i in range(0,initial_board.BoardSize):
@@ -177,12 +213,39 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
 
 	#Look through values	
     for v in domain:
-		updated_board = copy.deepcopy(initial_board)
-		updated_board.set_value(variable[0], variable[1], v)
-		result = solve(updated_board, forward_checking, MRV, Degree, LCV)
-		if(is_complete(result)):
-			return result
-	#Tried all values for a given variable, no valid solution
+        updated_board = copy.deepcopy(initial_board)
+        updated_board.set_value(variable[0], variable[1], v)
+        #Do forward checking
+        if(forward_checking):
+
+            found_empty_domain = False
+
+            for empty_square in empty_squares:
+                    domain = get_domain(updated_board, empty_square)
+                    if len(domain) <= 0:
+                        found_empty_domain = True
+                        break;
+
+            if(not found_empty_domain):
+                #print "(variable, value) : (", variable, ",", v,")"
+                
+                consistency_checks += 1
+                result = solve(updated_board, forward_checking, MRV, Degree, LCV)
+                
+                if(is_complete(result)):
+                    #print "success! (bottom-loop)"
+                    print "consistency_checks: ", consistency_checks
+                    return result
+		
+        else:
+            
+            consistency_checks += 1
+            result = solve(updated_board, forward_checking, MRV, Degree, LCV)
+            if(is_complete(result)):
+                return result
+	
+    #Tried all values for a given variable, no valid solution
+    print "back-track"
     return initial_board
 
 def get_domain(initial_board, variable):
