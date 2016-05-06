@@ -252,8 +252,8 @@ def solve(initial_board, forward_checking = False, MRV = False, Degree = False,
                     print "consistency_checks: ", consistency_checks
                     return result
 		
-	#If not forward checking, look through all values no matter what
         else:
+            
             consistency_checks += 1
             result = solve(updated_board, forward_checking, MRV, Degree, LCV)
             if(is_complete(result)):
@@ -282,7 +282,6 @@ def get_domain(initial_board, variable):
     return domain
 
 def all_dif(initial_board, variable, value):
-    """Given a variable, is the input value a valid choice?"""
     
     BoardArray = initial_board.CurrentGameBoard
 
@@ -310,8 +309,6 @@ def all_dif(initial_board, variable, value):
 
 #Given a variable, return a list of all unassigned variables affected by that var assignment
 def affected_vars(initial_board, variable):
-    """Returns list of the empty variables in a variables row, column and subsquare"""
-
     BoardArray = initial_board.CurrentGameBoard
     unassn_vars = []
 
@@ -329,6 +326,7 @@ def affected_vars(initial_board, variable):
     subsquare = int(math.sqrt(initial_board.BoardSize))
     SquareRow = variable[0] // subsquare
     SquareCol = variable[1] // subsquare
+
     for i in range(subsquare):
         for j in range(subsquare):
             indexRow = SquareRow*subsquare+i
