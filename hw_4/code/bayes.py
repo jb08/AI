@@ -15,6 +15,7 @@ class Bayes_Classifier:
       the system will proceed through training.  After running this method, the classifier 
       is ready to classify input text."""
 
+      print "reg bayes"
       #for calculating prior probabilities of positive & negative reviews
       self.num_positive_reviews = 0
       self.num_negative_reviews = 0
@@ -38,14 +39,12 @@ class Bayes_Classifier:
       	"""Trains the Naive Bayes Sentiment Classifier."""
    	#Get list of all filenames in the review folder
    	IFileList = []
-   	for fFileObj in os.walk("movie_reviews/"):
+   	for fFileObj in os.walk("movies_reviews/"):
    		IFileList = fFileObj[2]
    		break
    	
       #For each file name, parse and determine if pos (5) or neg (1)
    	for f in IFileList:
-   		
-         print "file: ", f
 
          #Positive review, add words/frequencies to positive dictionary
          if (f.startswith("movies-5")):
@@ -59,17 +58,17 @@ class Bayes_Classifier:
             #print "error: file didn't start with movies-1 or movies-5"
             continue
 
-         sTxt = self.loadFile("movie_reviews/" + f)
+         sTxt = self.loadFile("movies_reviews/" + f)
          token_list = self.tokenize(sTxt)
          #print "dictionary: ", dictionary
 
          for word in token_list:
       		#If word exists in dictionary already, increase frequency by 1
-      		if word.lower() in dictionary:
-      			dictionary[word.lower()] +=1
+      		if word in dictionary:
+      			dictionary[word] +=1
       		#Add word to dictionary with frequency of 1 if it did not already exist
       		else:
-      			dictionary[word.lower()] = 1 
+      			dictionary[word] = 1 
 
    def classify(self, sText):
       """Given a target string sText, this function returns the most likely document
@@ -77,24 +76,18 @@ class Bayes_Classifier:
       """
 
       #get tokens
-      tokens = self.tokenize(sText.lower())
+      tokens = self.tokenize(sText)
 
       #positive
       den = (self.num_positive_reviews+self.num_negative_reviews)
-      print "sum_freqs: ", den
       prior_prob = float(self.num_positive_reviews)/den
       log_sum = calc_log_sum(tokens, self.positive)
-      prob_pos_given_features = log_sum #+ math.log(prior_prob)
-
-      #negative
-      #print 1-prior_prob
-      #print "  should equal: "
+      prob_pos_given_features = log_sum + math.log(prior_prob)
 
       prior_prob = float(self.num_negative_reviews)/den
-      #print prior_prob
 
       log_sum = calc_log_sum(tokens, self.negative)
-      prob_neg_given_features = log_sum #+ math.log(prior_prob)
+      prob_neg_given_features = log_sum + math.log(prior_prob)
 
       if prob_pos_given_features > prob_neg_given_features:
          return "positive"
@@ -153,7 +146,7 @@ class Bayes_Classifier:
 
    def calc_num_reviews(self):
       IFileList = []
-      for fFileObj in os.walk("movie_reviews/"):
+      for fFileObj in os.walk("movies_reviews/"):
          IFileList = fFileObj[2]
          break
       

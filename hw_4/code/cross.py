@@ -33,17 +33,18 @@ def ten_fold():
 			ct += 1
 
         	if (f.startswith("movies-5")):
-   				if bc_result == "positive":
-   					pos_true += 1
-   				else:
-   					pos_false += 1
-
+        		
+        		if bc_result == "positive":
+        			pos_true += 1
+        		else:
+        			pos_false += 1
+   				
    				if bcc_result == "positive":
    					best_pos_true += 1
    				else:
    					best_pos_false += 1
 
-   			elif (f.startswith("movies-1")):
+			elif (f.startswith("movies-1")):
    				if bc_result == "negative":
    					neg_true += 1
    				else:
