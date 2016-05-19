@@ -1,6 +1,6 @@
 import bayes
 import bayesbest
-import os
+import os, time
 
 def ten_fold():
 
@@ -16,28 +16,29 @@ def ten_fold():
 
 	bc = bayes.Bayes_Classifier()
 	bcc = bayesbest.Bayes_Classifier()
+
 	for i in range(10):
-		print "Starting fold: ", i
-		testing,training = single_fold(i)
-		retrain(bc,training)
-		retrain(bcc,training)
-		print "\tDone training"
+		training,testing = single_fold(i)
+		retrain(bc,training, False)
+		retrain(bcc,training, True)
+		#print "\tDone training"
+		#print len(testing) 
+		#print len(training)
+		#time.sleep(3)
 		ct = 1
 		for f in testing:
 
 			sTxt = bc.loadFile("movies_reviews/" + f)
-			print "\tLoaded: ",ct
 			bc_result = bc.classify(sTxt)
 			bcc_result = bcc.classify(sTxt)
-			print "\tTested: " ,ct
+			#print "\tTested: " ,ct
 			ct += 1
 
-        	if (f.startswith("movies-5")):
-        		
-        		if bc_result == "positive":
-        			pos_true += 1
-        		else:
-        			pos_false += 1
+			if (f.startswith("movies-5")):
+				if bc_result == "positive":
+					pos_true += 1
+				else:
+					pos_false += 1
    				
    				if bcc_result == "positive":
    					best_pos_true += 1
@@ -54,11 +55,47 @@ def ten_fold():
    					best_neg_true += 1
    				else:
    					best_neg_false += 1
-        	
-		print "\treg results: %d %d %d %d" % pos_true, pos_false, neg_true, neg_false
-		print "\tbest results: %d %d %d %d" % best_pos_true, best_pos_false, best_neg_true, best_neg_false
+   		print "fold: ", i
+   		print "\treg results: %d %d %d %d" % (pos_true, pos_false, neg_true, neg_false)
+   		print "\tbest results: %d %d %d %d" % (best_pos_true, best_pos_false, best_neg_true, best_neg_false)
 
+	#precision
+	precision_positive = pos_true / float(pos_true + pos_false)
+	precision_negative = neg_true / float(neg_true + neg_false)
 
+	best_precision_positive = best_pos_true / float(best_pos_true + best_pos_false)
+	best_precision_negative = best_neg_true / float(best_neg_true + best_neg_false)
+
+	#recall
+	recall_positive = pos_true / float(pos_true + neg_false)
+	recall_negative = neg_true / float(neg_true + pos_false)
+
+	best_recall_positive = best_pos_true / float(best_pos_true + best_neg_false)
+	best_recall_negative = best_neg_true / float(best_neg_true + best_pos_false)
+
+	#f-measure
+	f_measure_positive = (2 * precision_positive * recall_positive) / float(precision_positive + recall_positive)
+	f_measure_negative = (2 * precision_negative * recall_negative) / float(precision_negative + recall_negative)
+
+	best_f_measure_positive = (2 * best_precision_positive * best_recall_positive) / float(best_precision_positive + best_recall_positive)
+	best_f_measure_negative = (2 * best_precision_negative * best_recall_negative) / float(best_precision_negative + best_recall_negative)
+
+	print "naive bayes classifier:"
+	print "   precision_positive: %.3f" % precision_positive
+	print "   precision_negative: %.3f"% precision_negative
+	print "   recall_positive: %.3f" %recall_positive
+	print "   recall_negative: %.3f" %recall_negative
+	print "   f_measure_positive: %.3f" %f_measure_positive
+	print "   f_measure_negative: %.3f" %f_measure_negative
+	print ""
+
+	print "naive bayes classifier (improved):"
+	print "   precision_positive: %.3f" %best_precision_positive
+	print "   precision_negative: %.3f" %best_precision_negative
+	print "   recall_positive: %.3f" %best_recall_positive
+	print "   recall_negative: %.3f" %best_recall_negative
+	print "   f_measure_positive: %.3f" %best_f_measure_positive
+	print "   f_measure_negative: %.3f" %best_f_measure_negative
 
 def single_fold(start_val):
 	count = start_val%10 #10 fold validation
@@ -81,7 +118,7 @@ def single_fold(start_val):
    	return training_set,testing_set
 
 
-def retrain(bc, training_set):
+def retrain(bc, training_set, is_best):
     #For each file name, parse and determine if pos (5) or neg (1)
     bc.positive = dict()
     bc.negative = dict()
@@ -103,10 +140,14 @@ def retrain(bc, training_set):
         token_list = bc.tokenize(sTxt)
         #print "dictionary: ", dictionary
 
-        for word in token_list:
+    	for word in token_list:
+      		
+      		if (is_best):
+	        	word = word.lower()
+
       		#If word exists in dictionary already, increase frequency by 1
       		if word in bc.dictionary:
       			bc.dictionary[word] +=1
       		#Add word to dictionary with frequency of 1 if it did not already exist
       		else:
-      			bc.dictionary[word] = 1 
+      			bc.dictionary[word] = 1
