@@ -87,7 +87,7 @@ def ten_fold():
 	print "   recall_negative: %.3f" %recall_negative
 	print "   f_measure_positive: %.3f" %f_measure_positive
 	print "   f_measure_negative: %.3f" %f_measure_negative
-	print ""
+	print " "
 
 	print "naive bayes classifier (improved):"
 	print "   precision_positive: %.3f" %best_precision_positive

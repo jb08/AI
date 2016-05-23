@@ -84,12 +84,12 @@ class Bayes_Classifier:
       den = (self.num_positive_reviews+self.num_negative_reviews)
       prior_prob = float(self.num_positive_reviews)/den
       log_sum = calc_log_sum(tokens, self.positive)
-      prob_pos_given_features = log_sum + math.log(prior_prob)
+      prob_pos_given_features = log_sum #+ math.log(prior_prob)
 
+      #negative
       prior_prob = float(self.num_negative_reviews)/den
-
       log_sum = calc_log_sum(tokens, self.negative)
-      prob_neg_given_features = log_sum + math.log(prior_prob)
+      prob_neg_given_features = log_sum #+ math.log(prior_prob)
 
       if prob_pos_given_features > prob_neg_given_features:
          return "positive"
