@@ -1,0 +1,40 @@
+Megan Sinclair, David Williams, Jason Brown
+
+Improvements in bestbayes.py:
+- all words lowercase and no punctuation; so “Great!” and “great” will map to the same word in the dictionary
+- got rid of prior probability, since the training corpus had many more positive reviews than negative reviews . In practice, if the ratio was not so skewed towards positive reviews, (as movie reviews are usually much more balanced between positive and negative in real life), then this would have yielded better performance.
+
+We automated the cross-validation and calculated performance metrics automatically, using a modulo approach to have each training and testing set have roughly similar counts of positive and negative reviews to train and test on, respectively.
+
+
+Results of basic naive bases classifier:
+
+naive bayes classifier:
+   precision_positive: 0.750
+   precision_negative: 0.937
+   recall_positive: 0.980
+   recall_negative: 0.479
+   f_measure_positive: 0.849
+   f_measure_negative: 0.634
+
+Results after removing punctuation and prior-probabilities:
+
+naive bayes classifier (improved):
+   precision_positive: 0.703
+   precision_negative: 0.974
+   recall_positive: 0.991
+   recall_negative: 0.446
+   f_measure_positive: 0.822
+   f_measure_negative: 0.612
+
+BEST - Results with removing punctuation (leaving in prior probabilities):
+
+naive bayes classifier (improved):
+   precision_positive: 0.791
+   precision_negative: 0.925
+   recall_positive: 0.977
+   recall_negative: 0.521
+   f_measure_positive: 0.874
+   f_measure_negative: 0.666
+
+To improve future performance, we would add bigrams to our classifier. One of the biggest problems with movie review classification is phrases like “not great” getting processed as positive reviews due to the word “great”, when it reality it should be treated as a single phrase rather than two words. Given the time, we feel that implementing that feature would make our classifier much more accurate.

@@ -1,6 +1,11 @@
 # Name: Megan Sinclair, David Williams, Jason Brown
 # Date: 5/23/16
 # All group members were present and contributing during all work on this project
+#
+# Note that there is a retrain function in this script. This function mirrors the training
+#  that is present in our bayes.py and bayesbest.py files. Mirroring it here was simply
+#  done to make our cross-validation easier, but bayesbest.py is still intended to be used
+#  by itself.
 
 import bayes
 import bayesbest
