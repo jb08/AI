@@ -129,7 +129,14 @@ class HMM:
         ''' Find the most likely labels for the sequence of data
             This is an implementation of the Viterbi algorithm  '''
         # You will implement this function
-        print "label function not yet implemented"
+        #print "label function not yet implemented"
+        print "label()"
+
+        #testing_data
+        data= [{'groundcond': 'dry'}, {'groundcond': 'damp'}, {'groundcond': 'soggy'}]
+
+        #implement viterbi algorithm here
+        
         return None
     
     def getEmissionProb( self, state, features ):
@@ -259,6 +266,18 @@ class StrokeLabeler:
             print "Length is", strokes[i].length()
             print "Curvature is", strokes[i].sumOfCurvature(abs)
     
+    def testing_example(self):
+        #Part 1 Viterbi Testing Example
+        
+        #priors
+        self.priors = {'sunny': .63, 'cloudy': .17, 'rainy': .2}
+
+        #evidence model
+        self.emissions = {'sunny': {'groundcond': [.6,.2,.15,.05]}, 'cloudy': {'groundcond': [.25,.25,.25,.25]}, 'rainy' : {'groundcond': [.05,.1,.35,.5]}}
+
+        #transition model
+        self.transitions = {'sunny': {'sunny': .5, 'cloudy': .25, 'rainy': .25}, 'cloudy': {'sunny': .375, 'cloudy': .125, 'rainy': .375}, 'rainy':{'sunny': .125, 'cloudy': .625, 'rainy': .375}}
+
     def labelFile( self, strokeFile, outFile ):
         ''' Label the strokes in the file strokeFile and save the labels
             (with the strokes) in the outFile '''
