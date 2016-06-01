@@ -43,6 +43,17 @@ class HMM:
         print "Transition model is:", self.transitions
         print "Evidence model is:", self.emissions
 
+    def train_example(self):
+        #priors
+        self.priors = {'sunny': .63, 'cloudy': .17, 'rainy': .2}
+
+        #evidence model 
+        self.emissions = {'sunny': {'groundcond': [.6,.2,.15,.05]}, 'cloudy': {'groundcond': [.25,.25,.25,.25]}, 'rainy' : {'groundcond': [.05,.1,.35,.5]}}
+
+        #transition model
+        self.transitions = {'sunny': {'sunny': .5, 'cloudy': .25, 'rainy': .25}, 'cloudy': {'sunny': .375, 'cloudy': .125, 'rainy': .375}, 'rainy':{'sunny': .125, 'cloudy': .625, 'rainy': .375}}
+
+
     def trainPriors( self, trainingData, trainingLabels ):
         ''' Train the priors based on the data and labels '''
         # Set the prior probabilities
@@ -131,12 +142,43 @@ class HMM:
         # You will implement this function
         #print "label function not yet implemented"
         print "label()"
+        #print "data: ", data
 
-        #testing_data
-        data= [{'groundcond': 'dry'}, {'groundcond': 'damp'}, {'groundcond': 'soggy'}]
+        #ground_cond: [dry, dryish, damp, soggy]
 
         #implement viterbi algorithm here
-        
+        result = {}
+
+        for i in range(len(data)):
+            evidence = data[i]
+            value = evidence['groundcond']
+
+            result[i] = {}
+            if i == 0:
+                priors = self.priors
+            #else:
+                #interesting calculation
+                #prev_day_priors = result[i-1]
+
+            for key in priors:  
+                weather_prob = priors[key]
+                evidence_given_hidden_state = self.emissions[key]['groundcond']
+                ground_cond_prob = 0 
+
+                if(value == 'dry'):
+                    ground_cond_prob = evidence_given_hidden_state[0]
+                elif(value == 'dryish'):
+                    ground_cond_prob = evidence_given_hidden_state[1]
+                elif(value == 'damp'):
+                    ground_cond_prob = evidence_given_hidden_state[2]
+                elif(value == 'soggy'):
+                    ground_cond_prob = evidence_given_hidden_state[3]
+                else:
+                    print "error: unknown evidence"
+
+                prob = weather_prob * ground_cond_prob
+                result[i][key] = prob
+        print result
         return None
     
     def getEmissionProb( self, state, features ):
@@ -265,18 +307,17 @@ class StrokeLabeler:
             print "Label is", labels[i]
             print "Length is", strokes[i].length()
             print "Curvature is", strokes[i].sumOfCurvature(abs)
-    
-    def testing_example(self):
-        #Part 1 Viterbi Testing Example
         
-        #priors
-        self.priors = {'sunny': .63, 'cloudy': .17, 'rainy': .2}
+    
+    def test_example(self):
+        ''' return a list of labels for the given list of strokes '''
+        self.hmm = HMM( self.labels, self.featureNames, self.contOrDisc, self.numFVals )
+        self.hmm.train_example()
 
-        #evidence model
-        self.emissions = {'sunny': {'groundcond': [.6,.2,.15,.05]}, 'cloudy': {'groundcond': [.25,.25,.25,.25]}, 'rainy' : {'groundcond': [.05,.1,.35,.5]}}
+         #testing_data
+        data= [{'groundcond': 'dry'}, {'groundcond': 'damp'}, {'groundcond': 'soggy'}]
 
-        #transition model
-        self.transitions = {'sunny': {'sunny': .5, 'cloudy': .25, 'rainy': .25}, 'cloudy': {'sunny': .375, 'cloudy': .125, 'rainy': .375}, 'rainy':{'sunny': .125, 'cloudy': .625, 'rainy': .375}}
+        self.hmm.label(data)
 
     def labelFile( self, strokeFile, outFile ):
         ''' Label the strokes in the file strokeFile and save the labels
