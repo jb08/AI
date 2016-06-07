@@ -44,6 +44,7 @@ class HMM:
         print "Evidence model is:", self.emissions
 
     def train_example(self):
+        #Used only for training Viterbi Example 1
         #priors
         self.priors = {'sunny': .63, 'cloudy': .17, 'rainy': .2}
 
@@ -51,7 +52,7 @@ class HMM:
         self.emissions = {'sunny': {'groundcond': [.6,.2,.15,.05]}, 'cloudy': {'groundcond': [.25,.25,.25,.25]}, 'rainy' : {'groundcond': [.05,.1,.35,.5]}}
 
         #transition model
-        self.transitions = {'sunny': {'sunny': .5, 'cloudy': .25, 'rainy': .25}, 'cloudy': {'sunny': .375, 'cloudy': .125, 'rainy': .375}, 'rainy':{'sunny': .125, 'cloudy': .625, 'rainy': .375}}
+        self.transitions = {'sunny': {'sunny': .5, 'cloudy': .25, 'rainy': .25}, 'cloudy': {'sunny': .375, 'cloudy': .125, 'rainy': .375}, 'rainy':{'sunny': .125, 'cloudy': .675, 'rainy': .375}}
 
 
     def trainPriors( self, trainingData, trainingLabels ):
@@ -135,51 +136,119 @@ class HMM:
                     for i in range(len(self.emissions[s][f])):
                         self.emissions[s][f][i] /= float(len(featureVals[s][f])+self.numVals[f])
 
+    def ex_get_prob_ev_given_state(self, value,evidence_given_hidden_state):
+        ''' Given observed state and probability of evidence given hidden state, return ground condition probability'''
+        #Used only in Viterbi Example 1
+        ground_cond_prob = 0 
+        if(value == 'dry'):
+            ground_cond_prob = evidence_given_hidden_state[0]
+        elif(value == 'dryish'):
+            ground_cond_prob = evidence_given_hidden_state[1]
+        elif(value == 'damp'):
+            ground_cond_prob = evidence_given_hidden_state[2]
+        elif(value == 'soggy'):
+            ground_cond_prob = evidence_given_hidden_state[3]
+        else:
+            print "error: unknown evidence"
+
+        return ground_cond_prob
+    def get_prob_ev_given_state(self, value,evidence_given_hidden_state):
+        ''' Given observed state and probability of evidence given hidden state, return ground condition probability'''
+
+        class_cond_prob = evidence_given_hidden_state[value]
+        return class_cond_prob
               
     def label( self, data ):
         ''' Find the most likely labels for the sequence of data
             This is an implementation of the Viterbi algorithm  '''
-        # You will implement this function
-        #print "label function not yet implemented"
-        print "label()"
-        #print "data: ", data
 
-        #ground_cond: [dry, dryish, damp, soggy]
-
-        #implement viterbi algorithm here
+        #implement viterbi algorithm
         result = {}
-
+        print data
+        return 
+        #iterate over observed data
         for i in range(len(data)):
             evidence = data[i]
-            value = evidence['groundcond']
+            value = evidence['length']
 
             result[i] = {}
+
+            #if i = 0, priors  = self.priors; no need for transition probabilities
             if i == 0:
                 priors = self.priors
-            #else:
-                #interesting calculation
-                #prev_day_priors = result[i-1]
+                for key in priors:  
+                    weather_prob = priors[key]
+                    evidence_given_hidden_state = self.emissions[key]['length']
+                    
+                    ground_cond_prob = self.get_prob_ev_given_state(value,evidence_given_hidden_state)
+                    
+                    prob = weather_prob * ground_cond_prob
+                    result[i][key] = prob
+            #use transition probabilities * partial probability from prior day to compute partial probability for today
+            else:
 
-            for key in priors:  
-                weather_prob = priors[key]
-                evidence_given_hidden_state = self.emissions[key]['groundcond']
-                ground_cond_prob = 0 
+                for key in result[i-1]:
+                    temp_partial = {}
+                    evidence_given_hidden_state = self.emissions[key]['length']
+                    ground_cond_prob = self.get_prob_ev_given_state(value,evidence_given_hidden_state)
 
-                if(value == 'dry'):
-                    ground_cond_prob = evidence_given_hidden_state[0]
-                elif(value == 'dryish'):
-                    ground_cond_prob = evidence_given_hidden_state[1]
-                elif(value == 'damp'):
-                    ground_cond_prob = evidence_given_hidden_state[2]
-                elif(value == 'soggy'):
-                    ground_cond_prob = evidence_given_hidden_state[3]
-                else:
-                    print "error: unknown evidence"
+                    #for partial prob, get max of transtion from each possible prior state
+                    for prior_key in result[i-1]:
 
-                prob = weather_prob * ground_cond_prob
-                result[i][key] = prob
+                        temp_partial[prior_key] = result[i-1][prior_key]
+                        temp_partial[prior_key] *= self.transitions[prior_key][key]
+                        temp_partial[prior_key] *= ground_cond_prob
+                    
+                    prob_key = max(temp_partial, key=lambda i: temp_partial[i])
+                    #most likely prior state and partial gets recorded in dictionary
+                    result[i][key] = temp_partial[prob_key]
+       
         print result
         return None
+
+        # #Part 1 Viterbi Testing Example
+        # result = {}
+
+        # #iterate over observed data
+        # for i in range(len(data)):
+        #     evidence = data[i]
+        #     value = evidence['groundcond']
+
+        #     result[i] = {}
+
+        #     #if i = 0, priors  = self.priors; no need for transition probabilities
+        #     if i == 0:
+        #         priors = self.priors
+        #         for key in priors:  
+        #             weather_prob = priors[key]
+        #             evidence_given_hidden_state = self.emissions[key]['groundcond']
+                    
+        #             ground_cond_prob = self.ex_get_prob_ev_given_state(value,evidence_given_hidden_state)
+                    
+        #             prob = weather_prob * ground_cond_prob
+        #             result[i][key] = prob
+        #     #use transition probabilities * partial probability from prior day to compute partial probability for today
+        #     else:
+
+        #         for key in result[i-1]:
+        #             temp_partial = {}
+        #             evidence_given_hidden_state = self.emissions[key]['groundcond']
+        #             ground_cond_prob = self.ex_get_prob_ev_given_state(value,evidence_given_hidden_state)
+
+        #             #for partial prob, get max of transtion from each possible prior state
+        #             for prior_key in result[i-1]:
+
+        #                 temp_partial[prior_key] = result[i-1][prior_key]
+        #                 temp_partial[prior_key] *= self.transitions[prior_key][key]
+        #                 temp_partial[prior_key] *= ground_cond_prob
+                    
+        #             prob_key = max(temp_partial, key=lambda i: temp_partial[i])
+        #             #most likely prior state and partial gets recorded in dictionary
+        #             result[i][key] = temp_partial[prob_key]
+       
+        # print result
+        # return None
+
     
     def getEmissionProb( self, state, features ):
         ''' Get P(features|state).
