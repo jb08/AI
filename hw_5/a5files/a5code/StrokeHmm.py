@@ -96,6 +96,7 @@ class HMM:
 
     def trainEmissions( self, trainingData, trainingLabels ):
         ''' given training data and labels, train the evidence model.  '''
+        
         self.emissions = {}
         featureVals = {}
         for s in self.states:
@@ -113,6 +114,7 @@ class HMM:
                 features = oneSketchFeatures[j]
                 for f in features.keys():
                     featureVals[oneSketchLabels[j]][f].append(features[f])
+
 
         # Do a slightly different thing for conituous vs. discrete features
         for s in featureVals.keys():
@@ -171,7 +173,9 @@ class HMM:
         #iterate over observed data
         for i in range(len(data)):
             evidence = data[i]
-            value = evidence['length']
+            length = evidence['length']
+            curve = evidence['curve']
+
 
             result[i] = {}
             series_of_states[i] = {}
@@ -180,20 +184,21 @@ class HMM:
             if i == 0:
                 priors = self.priors
                 for key in priors:  
-                    weather_prob = priors[key]
-                    evidence_given_hidden_state = self.emissions[key]['length']
-                    
-                    ground_cond_prob = self.get_prob_ev_given_state(value,evidence_given_hidden_state)
-                    
-                    prob = weather_prob * ground_cond_prob
+                    prior_prob = priors[key]
+                    prob = 1
+                    prob *= self.emissions[key]['length'][length]
+                    prob *= self.emissions[key]['curve'][curve]
+
+                    prob *= prior_prob 
                     result[i][key] = prob
             #use transition probabilities * partial probability from prior day to compute partial probability for today
             else:
 
                 for key in result[i-1]:
                     temp_partial = {}
-                    evidence_given_hidden_state = self.emissions[key]['length']
-                    ground_cond_prob = self.get_prob_ev_given_state(value,evidence_given_hidden_state)
+                    prob = 1
+                    prob *= self.emissions[key]['length'][length]
+                    prob *= self.emissions[key]['curve'][curve]
 
                     max_value = 0
                     #for partial prob, get max of transtion from each possible prior state
@@ -201,7 +206,7 @@ class HMM:
 
                         temp_partial[prior_key] = result[i-1][prior_key]
                         temp_partial[prior_key] *= self.transitions[prior_key][key]
-                        temp_partial[prior_key] *= ground_cond_prob
+                        temp_partial[prior_key] *= prob
                     
                         if temp_partial[prior_key]>max_value:
                                 max_value = temp_partial[prior_key]
@@ -342,9 +347,9 @@ class StrokeLabeler:
         #    name to whether it is continuous or discrete
         # numFVals is a dictionary specifying the number of legal values for
         #    each discrete feature
-        self.featureNames = ['length']
-        self.contOrDisc = {'length': DISCRETE}
-        self.numFVals = { 'length': 2}
+        self.featureNames = ['length','curve']
+        self.contOrDisc = {'length': DISCRETE, 'curve':DISCRETE}
+        self.numFVals = { 'length': 2,'curve': 2}
 
     def featurefy( self, strokes ):
         ''' Converts the list of strokes into a list of feature dictionaries
@@ -383,6 +388,12 @@ class StrokeLabeler:
             # above in the contructor: self.featureNames, self.contOrDisc,
             #    self.numFVals (for discrete features only)
 
+            #A stroke with a lot of curve is more likely to be text
+            c = s.sumOfCurvature()
+            if c < 0.10:
+                d['curve'] = 0
+            else:
+                d['curve'] = 1
 
             ret.append(d)  # append the feature dictionary to the list
             
@@ -661,6 +672,13 @@ class StrokeLabeler:
 
         for i in range(len(trueLabels)):
             result_dict[trueLabels[i]][classifications[i]]+=1
+            d_d = result_dict["drawing"]["drawing"]
+            d_t = result_dict["drawing"]["text"]
+            t_t = result_dict["text"]["text"]
+            t_d = result_dict["text"]["drawing"]
+        print "True Label\tClass as Draw\tClass as text\tPercent correct"
+        print "Drawing\t\t     %d\t\t     %d\t\t  %f" % (d_d,d_t ,d_d/(float)(d_t+d_d))
+        print "Text\t\t     %d\t\t     %d\t\t  %f" % (t_t,t_d ,t_t/(float)(t_d+t_t))
         return result_dict
 
     #Function to test confusion matrix from part 2
