@@ -1,0 +1,13 @@
+To build our “best” classifier, we chose to implement three features: stroke length, stroke curvature, and stroke area. We implemented all three of these features discretely. Each feature was a boolean value: if the stroke length, curvature, or area was less than a certain value, it was given a value of 0. If the stroke length, curvature, or area was greater than a certain value, it was given a value of 1.
+
+The cutoff values for the features were as follows:
+Length: 300px
+Curvature: .1
+Area: 50,000px^2
+
+We determined these thresholds for our features by examining a multitude of strokes that we already knew the correct classification for. After averaging the mean and median values for each feature of both text and drawing strokes, we found that the above thresholds were reasonably accurate divisions.
+
+Unfortunately, overall our classifier was not the most accurate. Due to the difficult nature of the problem, both our basic and improved classifiers heavily favored classifying strokes as drawings. We felt that in part, this was due to this classification problem’s high likelihood of staying the same in the transition probability for the Viterbi algorithm. If a stroke was classified as a drawing, then the next stroke had a 89.54% transition probability of also being a drawing. After the first stroke was classified as a drawing, this probability very heavily weighted all subsequent strokes in the image to be classified as drawings, which typically made our label output all drawings. 
+
+Below you can see our confusion matrices for testing the trained classifier on 15 random XML files. The basic did outperform our best classifier slightly on classifying drawings, but it was significantly worse at classifying text. Our best classifier still only classified a little over half of the text files correctly, so we would love to improve on it in the future given more time.
+
