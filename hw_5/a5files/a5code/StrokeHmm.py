@@ -1,3 +1,10 @@
+#
+# Names: Jason Brown, Megan Sinclair, David Williams
+# netids: jkb930, mes297, dmw956
+# Integrity Statement: All group members were present and contributing during all work on this project
+#
+#
+
 import xml.dom.minidom
 import copy
 import guid
