@@ -1,0 +1,11 @@
+StrokeHMM.py:
+
+True Label      Class as Draw   Class as text   Percent correct
+Drawing              207              47           0.814961
+Text                 122             101           0.547085
+
+StrokeHMMBasic.py:
+
+True Label      Class as Draw   Class as text   Percent correct
+Drawing              236              18           0.929134
+Text                 64              159           0.286996

@@ -1,3 +1,10 @@
+#
+# Names: Jason Brown, Megan Sinclair, David Williams
+# netids: jkb930, mes297, dmw956
+# Integrity Statement: All group members were present and contributing during all work on this project
+#
+#
+
 import xml.dom.minidom
 import copy
 import guid
@@ -175,7 +182,7 @@ class HMM:
             evidence = data[i]
             length = evidence['length']
             curve = evidence['curve']
-
+            area = evidence['area']
 
             result[i] = {}
             series_of_states[i] = {}
@@ -188,6 +195,7 @@ class HMM:
                     prob = 1
                     prob *= self.emissions[key]['length'][length]
                     prob *= self.emissions[key]['curve'][curve]
+                    prob *= self.emissions[key]['area'][area]
 
                     prob *= prior_prob 
                     result[i][key] = prob
@@ -199,6 +207,7 @@ class HMM:
                     prob = 1
                     prob *= self.emissions[key]['length'][length]
                     prob *= self.emissions[key]['curve'][curve]
+                    prob *= self.emissions[key]['area'][area]
 
                     max_value = 0
                     #for partial prob, get max of transtion from each possible prior state
@@ -347,9 +356,9 @@ class StrokeLabeler:
         #    name to whether it is continuous or discrete
         # numFVals is a dictionary specifying the number of legal values for
         #    each discrete feature
-        self.featureNames = ['length','curve']
-        self.contOrDisc = {'length': DISCRETE, 'curve':DISCRETE}
-        self.numFVals = { 'length': 2,'curve': 2}
+        self.featureNames = ['length','curve', 'area']
+        self.contOrDisc = {'length': DISCRETE, 'curve':DISCRETE, 'area':DISCRETE}
+        self.numFVals = { 'length': 2,'curve': 2, 'area': 2}
 
     def featurefy( self, strokes ):
         ''' Converts the list of strokes into a list of feature dictionaries
@@ -395,6 +404,13 @@ class StrokeLabeler:
             else:
                 d['curve'] = 1
 
+            #A stroke covering a smaller area is more likely to be text
+            a = s.area()
+            if a < 50000:
+                d['area'] = 0
+            else:
+                d['area'] = 1
+
             ret.append(d)  # append the feature dictionary to the list
             
         return ret
@@ -434,6 +450,7 @@ class StrokeLabeler:
             print "Label is", labels[i]
             print "Length is", strokes[i].length()
             print "Curvature is", strokes[i].sumOfCurvature(abs)
+            print "Area is", strokes[i].area()
         
     
     def test_example(self):
@@ -683,11 +700,19 @@ class StrokeLabeler:
 
     #Function to test confusion matrix from part 2
     def test_confusion(self):
-        a = "drawing"
-        b = "text"
-        truth_list = [a,a,b,a,b,b,b]
-        class_list = [b,a,b,a,b,b,a]
-        print self.confusion(truth_list, class_list)
+        total_label = []
+        total_output = []
+        for filename in os.listdir('../testingFiles'):
+            #print filename
+            strokes,label = self.loadLabeledFile("../testingFiles/"+filename)
+            output = self.labelStrokes(strokes)
+            for item in label:
+                total_label.append(item)
+            for item in output:
+                total_output.append(item)
+        self.confusion(total_label,total_output)
+
+
 
 class Stroke:
     ''' A class to represent a stroke (series of xyt points).
@@ -722,7 +747,27 @@ class Stroke:
             prev = p
         return ret
 
+    def area(self):
+        lowest=self.points[0];
+        highest=self.points[0];
+        left = self.points[0];
+        right = self.points[0];
 
+        for p in self.points[1:]:
+            x = p[0]
+            y = p[1]
+            if(y<lowest[1]):
+                lowest = p
+            if(y>highest[1]):
+                highest = p
+            if(x<left[0]):
+                left = p
+            if(x>right[0]):
+                right = p
+        height = highest[1] - lowest[1]
+        width = right[0] - left[0]
+
+        return (height*float(width))
 
     def sumOfCurvature(self, func=lambda x: x, skip=1):
         ''' Return the normalized sum of curvature for a stroke.

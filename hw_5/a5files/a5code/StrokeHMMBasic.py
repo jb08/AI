@@ -388,6 +388,20 @@ class StrokeLabeler:
             
         return ret
     
+    #Function to test confusion matrix from part 2
+    def test_confusion(self):
+        total_label = []
+        total_output = []
+        for filename in os.listdir('../testingFiles'):
+            #print filename
+            strokes,label = self.loadLabeledFile("../testingFiles/"+filename)
+            output = self.labelStrokes(strokes)
+            for item in label:
+                total_label.append(item)
+            for item in output:
+                total_output.append(item)
+        self.confusion(total_label,total_output)
+
     def trainHMM( self, trainingFiles ):
         ''' Train the HMM '''
         self.hmm = HMM( self.labels, self.featureNames, self.contOrDisc, self.numFVals )
@@ -661,15 +675,14 @@ class StrokeLabeler:
 
         for i in range(len(trueLabels)):
             result_dict[trueLabels[i]][classifications[i]]+=1
+            d_d = result_dict["drawing"]["drawing"]
+            d_t = result_dict["drawing"]["text"]
+            t_t = result_dict["text"]["text"]
+            t_d = result_dict["text"]["drawing"]
+        print "True Label\tClass as Draw\tClass as text\tPercent correct"
+        print "Drawing\t\t     %d\t\t     %d\t\t  %f" % (d_d,d_t ,d_d/(float)(d_t+d_d))
+        print "Text\t\t     %d\t\t     %d\t\t  %f" % (t_t,t_d ,t_t/(float)(t_d+t_t))
         return result_dict
-
-    #Function to test confusion matrix from part 2
-    def test_confusion(self):
-        a = "drawing"
-        b = "text"
-        truth_list = [a,a,b,a,b,b,b]
-        class_list = [b,a,b,a,b,b,a]
-        print self.confusion(truth_list, class_list)
 
 class Stroke:
     ''' A class to represent a stroke (series of xyt points).
